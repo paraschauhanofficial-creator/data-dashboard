@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
 
 
 import {
@@ -12,45 +14,61 @@ import {
 } from "lucide-react";
 
 export default function ProjectsPage() {
+    const router = useRouter();
     const [showModal, setShowModal] = useState(false);
 
-    const [projects, setProjects] = useState([
-  {
-    projectNo: "PRJ-24001",
-    client: "Novartis",
-    projectName: "Brain MRI Dataset",
-    created: "10-Jun-2026",
-    dataStatus: "RVT Alignment",
-    ivionStatus: "Active",
-  },
-]);
+    const [projects, setProjects] = useState<any[]>([]);
+    
 
     const [projectNo, setProjectNo] = useState("");
     const [client, setClient] = useState("");
     const [projectName, setProjectName] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
-    const handleCreateProject = () => {
+   
+    useEffect(() => {
+    fetchProjects();
+                   }, []);
+
+    async function fetchProjects() {
+    const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("archived", false)
+    .order("created_at", { ascending: false });
+
+    if (error) {
+    console.error(error);
+    return;
+  }
+
+  setProjects(data || []);
+}
+    const handleCreateProject = async () => {
   if (!projectNo || !client || !projectName) return;
 
-  const today = new Date().toLocaleDateString("en-GB");
+  const { error } = await supabase
+    .from("projects")
+    .insert([
+      {
+        project_no: projectNo,
+        client,
+        project_name: projectName,
+        data_status: "Pending",
+        ivion_status: "Pending",
+        archived: false,
+      },
+    ]);
 
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-  setProjects([
-    ...projects,
-    {
-      projectNo,
-      client,
-      projectName,
-      created: today,
-      dataStatus: "Pending",
-      ivionStatus: "Pending",
-    },
-  ]);
+  await fetchProjects();
 
   setProjectNo("");
   setClient("");
   setProjectName("");
-
   setShowModal(false);
 };
 const handleArchiveProject = (indexToRemove: number) => {
@@ -64,10 +82,10 @@ const handleArchiveProject = (indexToRemove: number) => {
     projects.filter((_, index) => index !== indexToRemove)
   );
 };
-const filteredProjects = projects.filter((project) =>
-  project.projectNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  project.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  project.projectName.toLowerCase().includes(searchTerm.toLowerCase())
+const filteredProjects = projects.filter((project: any) =>
+  project.project_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  project.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
 );
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-8 py-6">
@@ -129,7 +147,7 @@ const filteredProjects = projects.filter((project) =>
     className="grid grid-cols-8 gap-4 px-6 py-4 items-center border-b border-[#333333] hover:bg-[#2A2A2A] transition-all"
   >
     <div className="font-medium">
-      {project.projectNo}
+      {project.project_no}
     </div>
 
     <div className="text-gray-300">
@@ -137,29 +155,35 @@ const filteredProjects = projects.filter((project) =>
     </div>
 
     <div className="col-span-2">
-      {project.projectName}
+      {project.project_name}
     </div>
 
     <div className="text-gray-400">
-      {project.created}
+      {new Date(project.created_at).toLocaleDateString("en-GB")}
     </div>
 
     <div>
       <span className="px-2 py-1 rounded-md border border-[#6B4A2A] text-[#D89B52] text-xs">
-        {project.dataStatus}
+        {project.data_status}
       </span>
     </div>
 
     <div>
       <span className="px-2 py-1 rounded-md border border-[#2E5B3D] text-[#63D38B] text-xs">
-        {project.ivionStatus}
+        {project.ivion_status}
       </span>
     </div>
 
     <div className="flex items-center gap-4">
 
-      <button className="text-gray-400 hover:text-[#00B7FF]">
-        <Eye size={16} />
+      <button
+       onClick={() => {
+        alert(project.id);
+       router.push(`/projects/${project.id}`);
+       }}
+         className="text-gray-400 hover:text-[#00B7FF]"
+        >
+       <Eye size={16} />
       </button>
 
       <button className="text-gray-400 hover:text-[#D89B52]">
