@@ -186,9 +186,12 @@ const filteredProjects = projects.filter((project: any) =>
        <Eye size={16} />
       </button>
 
-      <button className="text-gray-400 hover:text-[#D89B52]">
-        <Pencil size={16} />
-      </button>
+      <button
+       onClick={() => router.push(`/projects/${project.id}/edit`)}
+       className="text-gray-400 hover:text-[#D89B52]"
+      >
+  <Pencil size={16} />
+</button>
 
       <button
         onClick={() => handleArchiveProject(index)}
