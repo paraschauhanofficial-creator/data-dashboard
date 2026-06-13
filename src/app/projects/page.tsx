@@ -50,13 +50,14 @@ export default function ProjectsPage() {
     .from("projects")
     .insert([
       {
-        project_no: projectNo,
-        client,
-        project_name: projectName,
-        data_status: "Pending",
-        ivion_status: "Pending",
-        archived: false,
-      },
+  project_no: projectNo,
+  client,
+  project_name: projectName,
+  data_status: "Pending Alignment",
+  ivion_status: "Incoming",
+  bundle_saved: false,
+  archived: false,
+    },
     ]);
 
   if (error) {
@@ -88,7 +89,7 @@ const filteredProjects = projects.filter((project: any) =>
   project.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
 );
   return (
-    <main className="min-h-screen bg-[#1A1A1A] text-white px-8 py-6">
+    <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
 
       {/* Page Header */}
 
@@ -104,7 +105,7 @@ const filteredProjects = projects.filter((project: any) =>
 
       {/* Navigation */}
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <Navbar />
 
         <Button onClick={() => setShowModal(true)}>
@@ -123,11 +124,11 @@ const filteredProjects = projects.filter((project: any) =>
 
       {/* Projects Table */}
 
-      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-hidden">
+      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-x-auto">
 
         {/* Table Header */}
 
-        <div className="grid grid-cols-8 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
+        <div className="min-w-[1000px] grid grid-cols-8 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
 
           <div>Project No.</div>
           <div>Client</div>
@@ -144,7 +145,7 @@ const filteredProjects = projects.filter((project: any) =>
         {filteredProjects.map((project, index) => (
   <div
     key={index}
-    className="grid grid-cols-8 gap-4 px-6 py-4 items-center border-b border-[#333333] hover:bg-[#2A2A2A] transition-all"
+    className="min-w-[1000px] grid grid-cols-8 gap-4 px-6 py-4 items-center border-b border-[#333333] hover:bg-[#2A2A2A] transition-all"
   >
     <div className="font-medium">
       {project.project_no}
@@ -243,7 +244,7 @@ const filteredProjects = projects.filter((project: any) =>
        {showModal && (
   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
 
-    <div className="w-[500px] bg-[#242424] border border-[#333333] rounded-2xl p-6">
+    <div className="w-[95%] max-w-[500px] bg-[#242424] border border-[#333333] rounded-2xl p-6">
 
       <h2 className="text-xl font-semibold mb-6">
         Add Project

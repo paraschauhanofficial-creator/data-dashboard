@@ -18,7 +18,7 @@ export default async function IvionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#1A1A1A] text-white px-8 py-6">
+    <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-wide">
           IVION
@@ -33,22 +33,27 @@ export default async function IvionPage() {
         <Navbar />
       </div>
 
-      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-hidden">
+      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-x-auto">
 
-        <div className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
-          <div>Project No.</div>
-          <div>Client</div>
-          <div>Project Name</div>
-          <div>IVION Status</div>
-          <div>Bundle Saved</div>
+        <div className="min-w-[900px]">
+
+          <div className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
+            <div>Project No.</div>
+            <div>Client</div>
+            <div>Project Name</div>
+            <div>IVION Status</div>
+            <div>Bundle Saved</div>
+          </div>
+
+          {projects?.map((project) => (
+            <IvionRow
+              key={project.id}
+              project={project}
+            />
+          ))}
+
         </div>
 
-        {projects?.map((project) => (
-  <IvionRow
-    key={project.id}
-    project={project}
-  />
-))}
       </div>
     </main>
   );

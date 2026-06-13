@@ -6,13 +6,50 @@ import { Eye, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+
+const [projectNo, setProjectNo] = useState("");
+const [client, setClient] = useState("");
+const [projectName, setProjectName] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+  fetchProjects();
+}, []);
+
+async function handleCreateProject() {
+  if (!projectNo || !client || !projectName) return;
+
+  const { error } = await supabase
+    .from("projects")
+    .insert([
+      {
+        project_no: projectNo,
+        client,
+        project_name: projectName,
+        data_status: "Pending Alignment",
+        ivion_status: "Incoming",
+        bundle_saved: false,
+        archived: false,
+      },
+    ]);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  await fetchProjects();
+
+  setProjectNo("");
+  setClient("");
+  setProjectName("");
+  setShowModal(false);
+}
 
   async function fetchProjects() {
     const { data } = await supabase
@@ -156,7 +193,11 @@ projects.forEach((project) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
   <Navbar />
 
-  <Button>Add Project</Button>
+  <Button onClick={() => setShowModal(true)}>
+  Add Project
+</Button>
+
+
 </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
   <Card
@@ -356,6 +397,64 @@ projects.forEach((project) => {
 
 </div>
 </div>
+
+
+{showModal && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+
+    <div className="w-[95%] max-w-[500px] bg-[#242424] border border-[#333333] rounded-2xl p-6">
+
+      <h2 className="text-xl font-semibold mb-6">
+        Add Project
+      </h2>
+
+      <div className="space-y-4">
+
+        <input
+          value={projectNo}
+          onChange={(e) => setProjectNo(e.target.value)}
+          placeholder="Project Number"
+          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3 outline-none"
+        />
+
+        <input
+          value={client}
+          onChange={(e) => setClient(e.target.value)}
+          placeholder="Client Name"
+          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3 outline-none"
+        />
+
+        <input
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="Project Name"
+          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3 outline-none"
+        />
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+
+        <button
+          onClick={() => setShowModal(false)}
+          className="px-4 py-2 text-gray-400"
+        >
+          Cancel
+        </button>
+
+        <Button onClick={handleCreateProject}>
+          Create Project
+        </Button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+
+
     </main>
   );
 }
