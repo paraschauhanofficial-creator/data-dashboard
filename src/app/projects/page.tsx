@@ -162,17 +162,51 @@ const filteredProjects = projects.filter((project: any) =>
       {new Date(project.created_at).toLocaleDateString("en-GB")}
     </div>
 
-    <div>
-      <span className="px-2 py-1 rounded-md border border-[#6B4A2A] text-[#D89B52] text-xs">
-        {project.data_status}
-      </span>
-    </div>
+
 
     <div>
-      <span className="px-2 py-1 rounded-md border border-[#2E5B3D] text-[#63D38B] text-xs">
-        {project.ivion_status}
-      </span>
-    </div>
+  <span
+    className={`px-2 py-1 rounded-md text-xs border ${
+      project.data_status === "Ready for Handover"
+        ? "border-[#2E5B3D] text-[#63D38B]"
+        : project.data_status === "Pending Alignment"
+        ? "border-[#7A2E2E] text-[#FF7B7B]"
+        : project.data_status === "Pending QC"
+        ? "border-[#6B4A2A] text-[#D89B52]"
+        : "border-[#7A6A2E] text-[#FFD95E]"
+    }`}
+  >
+    {project.data_status}
+  </span>
+</div>
+
+
+
+    <div>
+  <span
+    className={`px-2 py-1 rounded-md text-xs border ${
+      project.ivion_status === "Pending"
+        ? "border-[#7A2E2E] text-[#FF7B7B]"
+        : project.ivion_status === "Incoming" ||
+          project.ivion_status === "Processed"
+        ? "border-[#6B4A2A] text-[#D89B52]"
+        : project.ivion_status === "Aligned" &&
+          project.bundle_saved
+        ? "border-[#2E5B3D] text-[#63D38B]"
+        : "border-[#7A6A2E] text-[#FFD95E]"
+    }`}
+  >
+    {project.ivion_status === "Incoming" ||
+    project.ivion_status === "Processed"
+      ? "Aligning"
+      : project.ivion_status === "Aligned" &&
+        project.bundle_saved
+      ? "Ready for Deletion"
+      : project.ivion_status}
+  </span>
+</div>
+
+
 
     <div className="flex items-center gap-4">
 

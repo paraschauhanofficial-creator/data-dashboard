@@ -18,7 +18,7 @@ export default function DataProjectRow({
   const [showAlignmentModal, setShowAlignmentModal] = useState(false);
 
   const [selectedEntryId, setSelectedEntryId] = useState("");
-  const [revitVersion, setRevitVersion] = useState("2025");
+  const [revitVersion, setRevitVersion] = useState("");
   const [alignmentRemarks, setAlignmentRemarks] = useState("");
   const [showQcModal, setShowQcModal] = useState(false);
 
@@ -60,11 +60,11 @@ export default function DataProjectRow({
       return;
     }
 
-    alert("Entry saved successfully!");
+    await updateProjectStatus();
 
-    setReceivedDate("");
-    setDataType("VLX");
-    setScanCount("");
+
+
+    alert("Entry saved successfully!");
 
     setReceivedDate("");
     setDataType("VLX");
@@ -102,10 +102,21 @@ async function handleSaveAlignment() {
 
     .eq("id", selectedEntryId);
 
+
   if (error) {
     alert(error.message);
     return;
   }
+
+
+
+
+
+await updateProjectStatus();
+
+
+
+
 
   setSelectedEntryId("");
   setRevitVersion("2025");
@@ -114,6 +125,48 @@ async function handleSaveAlignment() {
   setShowAlignmentModal(false);
 
   window.location.reload();
+}
+
+
+async function updateProjectStatus() {
+  const { data: entries, error } = await supabase
+    .from("data_entries")
+    .select("*")
+    .eq("project_id", project.id)
+    .order("received_date", { ascending: false })
+    .limit(1);
+
+  if (error || !entries?.length) return;
+
+  const latest = entries[0];
+
+  let status = "Pending Alignment";
+
+  if (latest.alignment_done) {
+    status = "Pending QC";
+  }
+
+  if (
+    latest.qc_done &&
+    latest.qc_issues &&
+    latest.qc_issues !== "None"
+  ) {
+    status = latest.qc_issues;
+  }
+
+  if (
+    latest.qc_done &&
+    latest.qc_issues === "None"
+  ) {
+    status = "Ready for Handover";
+  }
+
+  await supabase
+    .from("projects")
+    .update({
+      data_status: status,
+    })
+    .eq("id", project.id);
 }
 
 
@@ -138,10 +191,18 @@ async function handleSaveQc() {
 
     .eq("id", selectedQcEntryId);
 
+   
+
   if (error) {
     alert(error.message);
     return;
   }
+
+
+
+  await updateProjectStatus();
+
+
 
   setSelectedQcEntryId("");
   setQcIssue("None");
@@ -175,22 +236,38 @@ async function handleUpdateEntry() {
   const { error } = await supabase
     .from("data_entries")
     .update({
-      received_date: receivedDate,
-      data_type: dataType,
-      scan_count: Number(scanCount),
+  received_date: receivedDate,
+  data_type: dataType,
+  scan_count: Number(scanCount),
 
-      revit_version: revitVersion,
-      alignment_remarks: alignmentRemarks,
+  revit_version: revitVersion || null,
+  alignment_remarks: alignmentRemarks,
 
-      qc_issues: qcIssue,
-      qc_remarks: qcRemarks,
-    })
+  alignment_done: !!revitVersion,
+  alignment_date: revitVersion
+    ? new Date().toISOString().split("T")[0]
+    : null,
+
+  qc_issues: qcIssue || null,
+  qc_remarks: qcRemarks,
+
+  qc_done: !!qcIssue,
+  qc_date: qcIssue
+    ? new Date().toISOString().split("T")[0]
+    : null,
+})
     .eq("id", editingEntryId);
 
   if (error) {
     alert(error.message);
     return;
   }
+
+
+
+  await updateProjectStatus();
+
+
 
   alert("Entry updated successfully!");
 
@@ -211,6 +288,32 @@ async function handleUpdateEntry() {
   window.location.reload();
 
   }
+
+
+
+
+
+  async function handleDeleteEntry(id: string) {
+  const confirmed = window.confirm(
+    "Delete this entry?"
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("data_entries")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Entry deleted successfully!");
+
+  window.location.reload();
+}
 
 
 
@@ -264,15 +367,19 @@ async function handleUpdateEntry() {
   
   
   Revit{" "}
+
+
+
 {
   project.data_entries
-    ?.filter((entry: any) => entry.alignment_date)
+    ?.filter((entry: any) => entry.revit_version)
     ?.sort(
       (a: any, b: any) =>
-        new Date(b.alignment_date).getTime() -
-        new Date(a.alignment_date).getTime()
+        Number(b.revit_version) -
+        Number(a.revit_version)
     )[0]?.revit_version || "-"
 }
+
 
 
 </span>
@@ -314,7 +421,7 @@ async function handleUpdateEntry() {
       <div className="space-y-2">
 
 
-  <div className="grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr_1fr_1.2fr_1fr_0.5fr] gap-4 text-xs uppercase tracking-wider text-gray-500 pb-2 border-b border-[#333333]">
+  <div className="grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr_1fr_1.2fr_1fr_1fr] gap-4 text-xs uppercase tracking-wider text-gray-500 pb-2 border-b border-[#333333]">
   <div>Date</div>
   <div>Type</div>
   <div>Scans</div>
@@ -322,9 +429,8 @@ async function handleUpdateEntry() {
   <div>Align Date</div>
   <div>QC Issue</div>
   <div>QC Date</div>
-  <div>Edit</div>
-  </div>
-
+  <div className="text-center">Edit / Delete</div>
+</div>
 
 
   {[...project.data_entries]
@@ -338,7 +444,7 @@ async function handleUpdateEntry() {
 
   <div
     key={entry.id}
-    className="grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr_1fr_1.2fr_1fr_0.5fr] gap-4 py-3 text-sm items-center border-b border-[#2A2A2A]"
+    className="grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr_1fr_1.2fr_1fr_1fr] gap-4 py-3 text-sm items-center border-b border-[#2A2A2A]"
   >
     <div>{entry.received_date}</div>
 
@@ -370,6 +476,9 @@ async function handleUpdateEntry() {
       )}
     </div>
 
+
+
+
     <div>
       {entry.qc_date || (
         <span className="text-gray-500">
@@ -378,18 +487,29 @@ async function handleUpdateEntry() {
       )}
     </div>
 
-    <div>
 
+
+    <div className="flex items-center justify-center gap-6">
 
   <button
-  onClick={() => handleEdit(entry)}
-  className="text-[#00B7FF] hover:text-[#33C7FF]"
-   >
-  ✎
+    onClick={() => handleEdit(entry)}
+    className="text-[#00B7FF] hover:text-[#33C7FF] text-base"
+    title="Edit"
+  >
+    ✎
   </button>
 
+  <button
+    onClick={() => handleDeleteEntry(entry.id)}
+    className="text-red-400 hover:text-red-300 text-base"
+    title="Delete"
+  >
+    🗑
+  </button>
 
 </div>
+
+
 
 
   </div>
@@ -557,6 +677,7 @@ async function handleUpdateEntry() {
             onChange={(e) => setRevitVersion(e.target.value)}
             className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3"
           >
+            <option value="">Not Aligned Yet</option>
             <option>2020</option>
             <option>2021</option>
             <option>2022</option>
@@ -657,6 +778,7 @@ async function handleUpdateEntry() {
             onChange={(e) => setQcIssue(e.target.value)}
             className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3"
           >
+            <option value="">Not QC'd Yet</option>
             <option>None</option>
             <option>Missing Scan</option>
             <option>Missing Area</option>
@@ -789,6 +911,7 @@ async function handleUpdateEntry() {
     onChange={(e) => setRevitVersion(e.target.value)}
     className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3"
   >
+    <option value="">Not Aligned Yet</option>
     <option>2020</option>
     <option>2021</option>
     <option>2022</option>
@@ -825,10 +948,11 @@ async function handleUpdateEntry() {
     onChange={(e) => setQcIssue(e.target.value)}
     className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3"
   >
-    <option>None</option>
-    <option>Missing Scan</option>
-    <option>Missing Area</option>
-    <option>Data Slips</option>
+    <option value="">Not QC'd Yet</option>
+<option>None</option>
+<option>Missing Scan</option>
+<option>Missing Area</option>
+<option>Data Slips</option>
   </select>
 </div>
 
