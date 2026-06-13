@@ -13,15 +13,7 @@ export default function Card({
 }: CardProps) {
   return (
     <div
-      className="
-        rounded-2xl
-        border
-        p-6
-        min-h-[120px]
-
-        transition-all
-        duration-300
-      "
+      className="rounded-2xl border p-6 min-h-[120px] transition-all duration-300"
       style={{
         backgroundColor: bgColor,
         borderColor: borderColor,
@@ -31,8 +23,7 @@ export default function Card({
         {title}
       </p>
 
-      <h2 className="text-4xl
-font-bold">
+      <h2 className="text-4xl font-bold">
         {value}
       </h2>
     </div>

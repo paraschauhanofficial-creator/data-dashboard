@@ -1,9 +1,146 @@
+"use client";
+
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Eye, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  async function fetchProjects() {
+    const { data } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("archived", false);
+
+    setProjects(data || []);
+  }
+
+
+
+  const pendingAlignment = projects.filter(
+  (p) => p.data_status === "Pending Alignment"
+).length;
+
+const pendingQc = projects.filter(
+  (p) =>
+    p.data_status === "Pending Alignment" ||
+    p.data_status === "Pending QC" ||
+    p.data_status === "Missing Area" ||
+    p.data_status === "Missing Scan" ||
+    p.data_status === "Data Slips"
+).length;
+
+const readyForHandover = projects.filter(
+  (p) => p.data_status === "Ready for Handover"
+).length;
+
+const qcIssues = projects.filter(
+  (p) =>
+    p.data_status === "Missing Scan" ||
+    p.data_status === "Missing Area" ||
+    p.data_status === "Data Slips"
+).length;
+
+
+const activeOnIvion = projects.filter(
+  (p) => p.ivion_status === "Aligned"
+).length;
+
+const pendingIvionDeletion = projects.filter(
+  (p) =>
+    p.ivion_status === "Aligned" &&
+    p.bundle_saved === true
+).length;
+
+
+
+const openTasks =
+  pendingAlignment +
+  pendingQc +
+  pendingIvionDeletion;
+
+
+
+
+const queueItems: any[] = [];
+
+projects.forEach((project) => {
+  // REVIT TASKS
+
+  if (project.data_status === "Pending Alignment") {
+    queueItems.push({
+      source: "REVIT",
+      project,
+      task: "Pending Alignment",
+      color: "orange",
+    });
+  }
+
+  if (
+    project.data_status === "Pending QC" ||
+    project.data_status === "Missing Area" ||
+    project.data_status === "Missing Scan" ||
+    project.data_status === "Data Slips"
+  ) {
+    queueItems.push({
+      source: "REVIT",
+      project,
+      task: project.data_status,
+      color: "yellow",
+    });
+  }
+
+  // IVION TASKS
+
+  if (
+    project.ivion_status === "Incoming" ||
+    project.ivion_status === "Processed"
+  ) {
+    queueItems.push({
+      source: "IVION",
+      project,
+      task: "Pending Alignment",
+      color: "orange",
+    });
+  }
+
+  if (
+    project.ivion_status === "Aligned" &&
+    !project.bundle_saved
+  ) {
+    queueItems.push({
+      source: "IVION",
+      project,
+      task: "Bundle Backup",
+      color: "yellow",
+    });
+  }
+
+  if (
+    project.ivion_status === "Aligned" &&
+    project.bundle_saved
+  ) {
+    queueItems.push({
+      source: "IVION",
+      project,
+      task: "Pending Deletion",
+      color: "red",
+    });
+  }
+});
+
+
+
+
+
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-8 py-6">
       <div className="mb-8">
@@ -23,39 +160,41 @@ export default function Home() {
 </div>
       <div className="grid grid-cols-5 gap-4">
   <Card
-    title="New Projects Incoming"
-    value={24}
-    bgColor="#1B2D3A"
-    borderColor="#2F4E68"
-  />
+  title="Active Projects"
+  value={projects.length}
+  bgColor="#1B2D3A"
+  borderColor="#2F4E68"
+/>
 
   <Card
-    title="Active on IVION"
-    value={87}
-    bgColor="#1E3326"
-    borderColor="#2E5B3D"
-  />
+  title="Active on IVION"
+  value={activeOnIvion}
+  bgColor="#1E3326"
+  borderColor="#2E5B3D"
+/>
 
   <Card
-    title="Pending Revit Alignment"
-    value={12}
-    bgColor="#3A2A1E"
-    borderColor="#6B4A2A"
-  />
+  title="Pending Revit Alignment"
+  value={pendingAlignment}
+  bgColor="#3A2A1E"
+  borderColor="#6B4A2A"
+/>
+
+<Card
+  title="Pending Scan QC"
+  value={pendingQc}
+  bgColor="#3A2A1E"
+  borderColor="#6B4A2A"
+/>
 
   <Card
-    title="Pending Scan QC"
-    value={8}
-    bgColor="#3A2A1E"
-    borderColor="#6B4A2A"
-  />
+  title="Pending IVION Deletion"
+  value={pendingIvionDeletion}
+  bgColor="#3A1F1F"
+  borderColor="#6A3030"
+/>
 
-  <Card
-    title="Pending Ivion Deletion"
-    value={3}
-    bgColor="#3A1F1F"
-    borderColor="#6A3030"
-  />
+
 </div>
 <div className="grid grid-cols-2 gap-6 mt-8">
   {/* Project Pipeline */}
@@ -69,12 +208,27 @@ export default function Home() {
 
   <div className="relative flex items-center justify-center">
 
-    <div className="w-64 h-64 rounded-full border-[36px] border-[#2F4E68]" />
+    <div
+  className="w-64 h-64 rounded-full"
+  style={{
+    background: `conic-gradient(
+      #D89B52 0 ${pendingAlignment * 360 / Math.max(openTasks, 1)}deg,
+      #FACC15 ${pendingAlignment * 360 / Math.max(openTasks, 1)}deg ${
+        (pendingAlignment + pendingQc) * 360 / Math.max(openTasks, 1)
+      }deg,
+      #E57373 ${
+        (pendingAlignment + pendingQc) * 360 / Math.max(openTasks, 1)
+      }deg 360deg
+    )`,
+  }}
+>
+  <div className="w-full h-full rounded-full bg-[#242424] scale-[0.72]" />
+</div>
 
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       <span className="text-4xl font-bold">
-        23
-      </span>
+  {openTasks}
+</span>
 
       <span className="text-sm text-gray-400">
         Open Tasks
@@ -85,24 +239,20 @@ export default function Home() {
 
   <div className="mt-8 grid grid-cols-2 gap-x-10 gap-y-4 text-sm max-w-md">
 
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-full bg-[#63D38B]" />
-      <span>Active in IVION (3)</span>
-    </div>
 
     <div className="flex items-center gap-2">
       <div className="w-3 h-3 rounded-full bg-[#D89B52]" />
-      <span>RVT Alignment (12)</span>
+      <span>RVT Alignment ({pendingAlignment})</span>
     </div>
 
     <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-full bg-[#D89B52]" />
-      <span>Scan QC (8)</span>
-    </div>
+  <div className="w-2.5 h-2.5 rounded-full bg-[#FACC15]" />
+  <span>Scan QC ({pendingQc})</span>
+</div>
 
     <div className="flex items-center gap-2">
       <div className="w-3 h-3 rounded-full bg-[#E57373]" />
-      <span>IVION Deletion (3)</span>
+      <span>IVION Deletion ({pendingIvionDeletion})</span>
     </div>
 
   </div>
@@ -131,121 +281,72 @@ export default function Home() {
 
 <div className="overflow-y-auto flex-1">
 
-  {/* Task 1 */}
+  
 
-  <div className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]">
+{queueItems.map((item, index) => {
+  let badgeClass =
+    "border-[#6B4A2A] text-[#D89B52]";
 
-  <div className="text-[#B88A4A] text-[10px] uppercase tracking-[0.15em]">
-    REVIT
-  </div>
+  if (item.color === "yellow") {
+    badgeClass =
+      "border-[#EAB308] text-[#FACC15]";
+  }
 
-  <div className="text-gray-500">
-    004
-  </div>
+  if (item.color === "red") {
+    badgeClass =
+      "border-[#6A3030] text-[#E57373]";
+  }
 
-  <div className="text-gray-300">
-    Siemens
-  </div>
+  return (
+    <div
+      key={index}
+      className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]"
+    >
+      <div
+        className={`text-[10px] uppercase tracking-[0.15em] ${
+          item.source === "IVION"
+            ? "text-[#63D38B]"
+            : "text-[#B88A4A]"
+        }`}
+      >
+        {item.source}
+      </div>
 
-  <div className="truncate">
-    Stroke MRI Analysis
-  </div>
+      <div className="text-gray-500">
+        {item.project.project_no}
+      </div>
 
-  <div>
-    <span className="px-2 py-1 rounded-md border border-[#6B4A2A] text-[#D89B52] text-xs">
-      RVT Alignment
-    </span>
-  </div>
+      <div className="text-gray-300">
+        {item.project.client}
+      </div>
 
-  <div className="flex justify-end gap-2">
-    <button className="text-gray-400 hover:text-[#00B7FF] hover:scale-110 transition-all">
-  <Eye size={15} />
-</button>
+      <div className="truncate">
+        {item.project.project_name}
+      </div>
 
-<button className="text-gray-400 hover:text-[#00FF99] hover:scale-110 transition-all">
-  <Check size={15} />
-</button>
-  </div>
+      <div>
+        <span
+          className={`px-2 py-1 rounded-md border text-xs ${badgeClass}`}
+        >
+          {item.task}
+        </span>
+      </div>
 
-</div>
+      <div className="flex justify-end">
+        <button className="text-gray-400 hover:text-[#00B7FF]">
+          <Eye size={15} />
+        </button>
+      </div>
+    </div>
+  );
+})}
 
-  {/* Task 2 */}
 
-  <div className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]">
-
-  <div className="text-[#B88A4A] text-[10px] uppercase tracking-[0.15em]">
-    REVIT
-  </div>
-
-  <div className="text-gray-500">
-    005
-  </div>
-
-  <div className="text-gray-300">
-    Philips
-  </div>
-
-  <div className="truncate">
-    Neuro CT Dataset
-  </div>
-
-  <div>
-    <span className="px-2 py-1 rounded-md border border-[#6B4A2A] text-[#D89B52] text-xs">
-      Scan QC
-    </span>
-  </div>
-
-  <div className="flex justify-end gap-2">
-    <button className="text-gray-400 hover:text-[#00B7FF] hover:scale-110 transition-all">
-  <Eye size={15} />
-</button>
-
-<button className="text-gray-400 hover:text-[#00FF99] hover:scale-110 transition-all">
-  <Check size={15} />
-</button>
-  </div>
 
 </div>
 
-  {/* Task 3 */}
 
-  <div className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]">
 
-  <div className="text-[#4FA36B] text-[10px] uppercase tracking-[0.15em]">
-    IVION
-  </div>
-
-  <div className="text-gray-500">
-    006
-  </div>
-
-  <div className="text-gray-300">
-    Canon
-  </div>
-
-  <div className="truncate">
-    Lung Screening Study
-  </div>
-
-  <div>
-    <span className="px-2 py-1 rounded-md border border-[#6A3030] text-[#E57373] text-xs">
-      IVION Deletion
-    </span>
-  </div>
-
-  <div className="flex justify-end gap-2">
-    <button className="text-gray-400 hover:text-[#00B7FF] hover:scale-110 transition-all">
-  <Eye size={15} />
-</button>
-
-<button className="text-gray-400 hover:text-[#00FF99] hover:scale-110 transition-all">
-  <Check size={15} />
-</button>
-  </div>
-
-</div>
-
-</div>
 </div>
 </div>
     </main>
