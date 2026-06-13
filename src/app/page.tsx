@@ -142,7 +142,7 @@ projects.forEach((project) => {
 
 
   return (
-    <main className="min-h-screen bg-[#1A1A1A] text-white px-8 py-6">
+    <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-wide">
           Data Management
@@ -153,12 +153,12 @@ projects.forEach((project) => {
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
   <Navbar />
 
   <Button>Add Project</Button>
 </div>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
   <Card
   title="Active Projects"
   value={projects.length}
@@ -196,7 +196,7 @@ projects.forEach((project) => {
 
 
 </div>
-<div className="grid grid-cols-2 gap-6 mt-8">
+<div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
   {/* Project Pipeline */}
 
   <div className="bg-[#242424] border border-[#333333] rounded-2xl p-6 h-[500px] flex flex-col">
@@ -268,79 +268,86 @@ projects.forEach((project) => {
   Active Queue
 </h2>
 
-<div className="grid grid-cols-[65px_45px_120px_1fr_120px_60px] gap-4 px-1 pb-3 text-[11px] uppercase tracking-wider text-gray-500 border-b border-[#333333]">
 
-  <div>Source</div>
-  <div>ID</div>
-  <div>Client</div>
-  <div>Project</div>
-  <div>Task</div>
-  <div></div>
 
-</div>
+<div className="overflow-x-auto flex-1">
 
-<div className="overflow-y-auto flex-1">
+  <div className="min-w-[700px]">
 
-  
+    <div className="grid grid-cols-[65px_45px_120px_1fr_120px_60px] gap-4 px-1 pb-3 text-[11px] uppercase tracking-wider text-gray-500 border-b border-[#333333]">
 
-{queueItems.map((item, index) => {
-  let badgeClass =
-    "border-[#6B4A2A] text-[#D89B52]";
+      <div>Source</div>
+      <div>ID</div>
+      <div>Client</div>
+      <div>Project</div>
+      <div>Task</div>
+      <div></div>
 
-  if (item.color === "yellow") {
-    badgeClass =
-      "border-[#EAB308] text-[#FACC15]";
-  }
-
-  if (item.color === "red") {
-    badgeClass =
-      "border-[#6A3030] text-[#E57373]";
-  }
-
-  return (
-    <div
-      key={index}
-      className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]"
-    >
-      <div
-        className={`text-[10px] uppercase tracking-[0.15em] ${
-          item.source === "IVION"
-            ? "text-[#63D38B]"
-            : "text-[#B88A4A]"
-        }`}
-      >
-        {item.source}
-      </div>
-
-      <div className="text-gray-500">
-        {item.project.project_no}
-      </div>
-
-      <div className="text-gray-300">
-        {item.project.client}
-      </div>
-
-      <div className="truncate">
-        {item.project.project_name}
-      </div>
-
-      <div>
-        <span
-          className={`px-2 py-1 rounded-md border text-xs ${badgeClass}`}
-        >
-          {item.task}
-        </span>
-      </div>
-
-      <div className="flex justify-end">
-        <button className="text-gray-400 hover:text-[#00B7FF]">
-          <Eye size={15} />
-        </button>
-      </div>
     </div>
-  );
-})}
 
+    <div className="overflow-y-auto flex-1">
+
+      {queueItems.map((item, index) => {
+        let badgeClass =
+          "border-[#6B4A2A] text-[#D89B52]";
+
+        if (item.color === "yellow") {
+          badgeClass =
+            "border-[#EAB308] text-[#FACC15]";
+        }
+
+        if (item.color === "red") {
+          badgeClass =
+            "border-[#6A3030] text-[#E57373]";
+        }
+
+        return (
+          <div
+            key={index}
+            className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]"
+          >
+            <div
+              className={`text-[10px] uppercase tracking-[0.15em] ${
+                item.source === "IVION"
+                  ? "text-[#63D38B]"
+                  : "text-[#B88A4A]"
+              }`}
+            >
+              {item.source}
+            </div>
+
+            <div className="text-gray-500">
+              {item.project.project_no}
+            </div>
+
+            <div className="text-gray-300">
+              {item.project.client}
+            </div>
+
+            <div className="truncate">
+              {item.project.project_name}
+            </div>
+
+            <div>
+              <span
+                className={`px-2 py-1 rounded-md border text-xs ${badgeClass}`}
+              >
+                {item.task}
+              </span>
+            </div>
+
+            <div className="flex justify-end">
+              <button className="text-gray-400 hover:text-[#00B7FF]">
+                <Eye size={15} />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+    </div>
+
+  </div>
 
 
 </div>
