@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, User, LogOut } from "lucide-react";
+import { Archive, User, LogOut, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Props = {
@@ -45,6 +45,15 @@ export default function HeaderActions({
 
       {menuOpen && (
         <div className="absolute top-10 right-0 w-44 bg-[#242424] border border-[#333333] rounded-xl shadow-lg overflow-hidden z-50">
+
+          <Link
+            href="/admin"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#2E2E2E] transition border-b border-[#333333]"
+            onClick={() => setMenuOpen(false)}
+          >
+            <Settings size={14} />
+            Admin Panel
+          </Link>
 
           <button
             onClick={handleLogout}
