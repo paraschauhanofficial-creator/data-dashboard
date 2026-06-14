@@ -20,6 +20,12 @@ export default function AdminPage() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newName, setNewName] = useState("");
+const [newEmail, setNewEmail] = useState("");
+const [newPassword, setNewPassword] = useState("");
+const [newRole, setNewRole] = useState("staff");
+const [creatingUser, setCreatingUser] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -51,7 +57,7 @@ export default function AdminPage() {
 
 
 
-  
+
 
   async function updateUserRole(userId: string, newRole: string) {
   setUpdating(userId);
@@ -109,6 +115,68 @@ export default function AdminPage() {
 
 
 
+async function createUser() {
+  try {
+    setCreatingUser(true);
+
+    const response = await fetch(
+      "/api/admin/create-user",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: newEmail,
+          password: newPassword,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setSuccess(`error: ${result.error}`);
+      setCreatingUser(false);
+      return;
+    }
+
+    const userId = result.user.id;
+
+    await supabase
+      .from("profiles")
+      .update({
+        full_name: newName,
+        role: newRole,
+      })
+      .eq("id", userId);
+
+    await loadUsers();
+
+    setShowCreateModal(false);
+
+    setNewName("");
+    setNewEmail("");
+    setNewPassword("");
+    setNewRole("staff");
+
+    setSuccess("User created successfully");
+
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  } catch {
+    setSuccess("error: Failed to create user");
+  } finally {
+    setCreatingUser(false);
+  }
+}
+
+
+
+
+
+
   
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
@@ -141,11 +209,18 @@ export default function AdminPage() {
 
       <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-hidden">
         
-        <div className="px-6 py-4 border-b border-[#333333]">
-          <h2 className="font-semibold text-lg">
-            Users
-          </h2>
-        </div>
+        <div className="px-6 py-4 border-b border-[#333333] flex items-center justify-between">
+  <h2 className="font-semibold text-lg">
+    Users
+  </h2>
+
+  <button
+    onClick={() => setShowCreateModal(true)}
+    className="px-4 py-2 bg-[#00B7FF] text-black rounded-lg font-medium hover:opacity-90 transition"
+  >
+    + Add User
+  </button>
+</div>
 
         {loading ? (
           <div className="p-6">
@@ -180,9 +255,8 @@ export default function AdminPage() {
                         disabled={currentUser?.role !== "admin" || updating === user.id}
                         className="bg-[#1A1A1A] border border-[#333333] rounded-lg px-3 py-2 text-sm cursor-pointer hover:border-[#00B7FF] transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="user">User</option>
+                        <option value="staff">Staff</option>
                         <option value="admin">Admin</option>
-                        <option value="viewer">Viewer</option>
                       </select>
                     </td>
 
@@ -227,6 +301,82 @@ export default function AdminPage() {
         )}
 
       </div>
+
+
+
+    {showCreateModal && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-[#242424] border border-[#333333] rounded-2xl p-6">
+
+      <h2 className="text-xl font-semibold mb-6">
+        Create User
+      </h2>
+
+      <div className="space-y-4">
+
+        <input
+  value={newName}
+  onChange={(e) => setNewName(e.target.value)}
+  placeholder="Full Name"
+  className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3"
+/>
+
+        <input
+  value={newEmail}
+  onChange={(e) => setNewEmail(e.target.value)}
+  placeholder="Email Address"
+  className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3"
+/>
+
+        
+
+        <input
+  type="password"
+  value={newPassword}
+  onChange={(e) => setNewPassword(e.target.value)}
+  placeholder="Temporary Password"
+  className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3"
+/>
+
+<select
+  value={newRole}
+  onChange={(e) => setNewRole(e.target.value)}
+  className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3"
+>
+  <option value="staff">Staff</option>
+  <option value="admin">Admin</option>
+</select>
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+
+        <button
+          onClick={() => setShowCreateModal(false)}
+          className="px-4 py-2 border border-[#333333] rounded-lg"
+        >
+          Cancel
+        </button>
+
+        <button
+  onClick={createUser}
+  disabled={creatingUser}
+  className="px-4 py-2 bg-[#00B7FF] text-black rounded-lg font-medium disabled:opacity-50"
+>
+  {creatingUser ? "Creating..." : "Create User"}
+</button>
+
+      </div>
+
+    </div>
+  </div>
+  
+)}
+
+
+
+
+
 
     </main>
   );
