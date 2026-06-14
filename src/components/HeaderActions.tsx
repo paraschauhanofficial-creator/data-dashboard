@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, User } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Archive, User, LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type Props = {
   hideArchive?: boolean;
@@ -10,8 +13,19 @@ type Props = {
 export default function HeaderActions({
   hideArchive = false,
 }: Props) {
+  const router = useRouter();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 relative">
 
       {!hideArchive && (
         <Link
@@ -23,10 +37,25 @@ export default function HeaderActions({
       )}
 
       <button
+        onClick={() => setMenuOpen(!menuOpen)}
         className="h-8 w-8 flex items-center justify-center rounded-lg border border-[#333333] hover:border-[#00B7FF] hover:text-[#00B7FF] transition"
       >
         <User size={14} />
       </button>
+
+      {menuOpen && (
+        <div className="absolute top-10 right-0 w-44 bg-[#242424] border border-[#333333] rounded-xl shadow-lg overflow-hidden z-50">
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#2E2E2E] transition"
+          >
+            <LogOut size={14} />
+            Logout
+          </button>
+
+        </div>
+      )}
 
     </div>
   );
