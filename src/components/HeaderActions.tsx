@@ -18,10 +18,21 @@ export default function HeaderActions({
   const [menuOpen, setMenuOpen] = useState(false);
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-
-    router.push("/login");
-    router.refresh();
+    try {
+      await supabase.auth.signOut();
+      
+      // Clear all local storage
+      localStorage.clear();
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
+      // Hard redirect to login page
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/login";
+    }
   }
 
   return (
