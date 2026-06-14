@@ -212,14 +212,13 @@ const filteredProjects = projects.filter((project: any) =>
     <div className="flex items-center gap-4">
 
       <button
-       onClick={() => {
-        alert(project.id);
-       router.push(`/projects/${project.id}`);
-       }}
-         className="text-gray-400 hover:text-[#00B7FF]"
-        >
-       <Eye size={16} />
-      </button>
+  onClick={() => {
+    router.push(`/projects/${project.id}`);
+  }}
+  className="text-gray-400 hover:text-[#00B7FF]"
+>
+  <Eye size={16} />
+</button>
 
       <button
        onClick={() => router.push(`/projects/${project.id}/edit`)}

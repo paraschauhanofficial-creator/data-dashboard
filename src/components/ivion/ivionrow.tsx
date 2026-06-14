@@ -9,9 +9,14 @@ type Props = {
 
 export default function IvionRow({ project }: Props) {
   const [status, setStatus] = useState(project.ivion_status);
+
   const [bundleSaved, setBundleSaved] = useState(
-  project.bundle_saved || false
-);
+    project.bundle_saved || false
+  );
+
+  const [deletedFromIvion, setDeletedFromIvion] = useState(
+    project.deleted_from_ivion || false
+  );
 
   async function handleStatusChange(
     newStatus: string
@@ -31,7 +36,7 @@ export default function IvionRow({ project }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-[#333333]">
+    <div className="grid grid-cols-[150px_350px_1fr_200px_120px_100px] gap-5 px-6 py-3 border-b border-[#333333]">
 
       <div>{project.project_no}</div>
 
@@ -62,34 +67,69 @@ export default function IvionRow({ project }: Props) {
           <option value="Aligned">
             Aligned
           </option>
-
         </select>
       </div>
 
-      <div>
-  <input
-    type="checkbox"
-    checked={bundleSaved}
-    disabled={status !== "Aligned"}
-    onChange={async (e) => {
-  const checked = e.target.checked;
+      <div className="flex justify-center">
+        <input
+          type="checkbox"
+          checked={bundleSaved}
+          disabled={status !== "Aligned"}
+          onChange={async (e) => {
+            const checked = e.target.checked;
 
-  setBundleSaved(checked);
+            setBundleSaved(checked);
 
-  const { error } = await supabase
-    .from("projects")
-    .update({
-      bundle_saved: checked,
-    })
-    .eq("id", project.id);
+            if (!checked) {
+              setDeletedFromIvion(false);
 
-  if (error) {
-    console.error(error);
-  }
-}}
-    className="h-4 w-4 accent-[#00B7FF] cursor-pointer disabled:opacity-40"
-  />
-</div>
+              await supabase
+                .from("projects")
+                .update({
+                  deleted_from_ivion: false,
+                })
+                .eq("id", project.id);
+            }
+
+            const { error } = await supabase
+              .from("projects")
+              .update({
+                bundle_saved: checked,
+              })
+              .eq("id", project.id);
+
+            if (error) {
+              console.error(error);
+            }
+          }}
+          className="h-4 w-4 accent-[#00B7FF] cursor-pointer disabled:opacity-40"
+        />
+      </div>
+
+      <div className="flex justify-center">
+        <input
+          type="checkbox"
+          checked={deletedFromIvion}
+          disabled={!bundleSaved}
+          onChange={async (e) => {
+            const checked = e.target.checked;
+
+            setDeletedFromIvion(checked);
+
+            const { error } = await supabase
+              .from("projects")
+              .update({
+                deleted_from_ivion: checked,
+              })
+              .eq("id", project.id);
+
+            if (error) {
+              console.error(error);
+            }
+          }}
+          className="h-4 w-4 accent-red-500 cursor-pointer disabled:opacity-40"
+        />
+      </div>
 
     </div>
   );

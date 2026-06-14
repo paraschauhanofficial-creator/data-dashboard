@@ -1,24 +1,21 @@
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
-import DataProjectRow from "@/components/data/DataProjectRow";
+import IvionRow from "@/components/ivion/ivionrow";
 
-export default async function DataProjectPage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 
-  const { data: project, error } = await supabase
+  const { data: project } = await supabase
     .from("projects")
-    .select(`
-      *,
-      data_entries (*)
-    `)
+    .select("*")
     .eq("id", id)
     .single();
 
-  if (error || !project) {
+  if (!project) {
     return (
       <main className="min-h-screen bg-[#1A1A1A] text-white p-8">
         Project not found
@@ -29,11 +26,11 @@ export default async function DataProjectPage({
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-wide">
+        <h1 className="text-2xl font-semibold">
           {project.project_name}
         </h1>
 
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="text-gray-400">
           {project.project_no} • {project.client}
         </p>
       </div>
@@ -46,11 +43,12 @@ export default async function DataProjectPage({
         <div className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
           <div>Project No.</div>
           <div>Client</div>
-          <div className="col-span-2">Project Name</div>
-          <div>Data Entries</div>
+          <div>Project Name</div>
+          <div>IVION Status</div>
+          <div>Bundle Saved</div>
         </div>
 
-        <DataProjectRow project={project} />
+        <IvionRow project={project} />
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 import EditProjectForm from "@/components/projects/EditProjectForm";
 import { supabase } from "@/lib/supabase";
+import BackButton from "@/components/BackButton";
 
 export default async function EditProjectPage({
   params,
@@ -24,6 +25,8 @@ export default async function EditProjectPage({
 
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white p-8">
+      <BackButton />
+
       <h1 className="text-2xl font-semibold mb-6">
         Edit Project
       </h1>

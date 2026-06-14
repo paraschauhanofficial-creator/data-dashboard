@@ -162,16 +162,17 @@ projects.forEach((project) => {
   }
 
   if (
-    project.ivion_status === "Aligned" &&
-    project.bundle_saved
-  ) {
-    queueItems.push({
-      source: "IVION",
-      project,
-      task: "Pending Deletion",
-      color: "red",
-    });
-  }
+  project.ivion_status === "Aligned" &&
+  project.bundle_saved &&
+  !project.deleted_from_ivion
+) {
+  queueItems.push({
+    source: "IVION",
+    project,
+    task: "Pending Deletion",
+    color: "red",
+  });
+}
 });
 
 
@@ -311,11 +312,11 @@ projects.forEach((project) => {
 
 
 
-<div className="overflow-x-auto flex-1">
+<div className="overflow-x-auto flex-1 pr-4">
 
   <div className="min-w-[700px]">
 
-    <div className="grid grid-cols-[65px_45px_120px_1fr_120px_60px] gap-4 px-1 pb-3 text-[11px] uppercase tracking-wider text-gray-500 border-b border-[#333333]">
+    <div className="grid grid-cols-[65px_45px_120px_1fr_120px_80px] gap-4 px-1 pb-3 text-[11px] uppercase tracking-wider text-gray-500 border-b border-[#333333]">
 
       <div>Source</div>
       <div>ID</div>
@@ -345,7 +346,7 @@ projects.forEach((project) => {
         return (
           <div
             key={index}
-            className="grid grid-cols-[60px_50px_120px_1fr_140px_60px] gap-4 items-center py-3 border-b border-[#333333]"
+            className="grid grid-cols-[60px_50px_120px_1fr_140px_80px] gap-4 items-center py-3 pr-4 border-b border-[#333333]"
           >
             <div
               className={`text-[10px] uppercase tracking-[0.15em] ${
@@ -378,8 +379,17 @@ projects.forEach((project) => {
             </div>
 
             <div className="flex justify-end">
-              <button className="text-gray-400 hover:text-[#00B7FF]">
-                <Eye size={15} />
+              <button
+               onClick={() => {
+                 if (item.source === "REVIT") {
+                router.push(`/data/${item.project.id}`);
+                 } else {
+                 router.push(`/ivion/${item.project.id}`);
+                 }
+                }}
+                className="text-gray-400 hover:text-[#00B7FF]"
+                >
+                 <Eye size={15} />
               </button>
             </div>
           </div>
