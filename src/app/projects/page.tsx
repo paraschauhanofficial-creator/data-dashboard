@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Navbar from "@/components/Navbar";
+import HeaderActions from "@/components/HeaderActions";
 import { supabase } from "@/lib/supabase";
 
 
@@ -72,17 +73,41 @@ export default function ProjectsPage() {
   setProjectName("");
   setShowModal(false);
 };
-const handleArchiveProject = (indexToRemove: number) => {
+
+
+
+async function handleArchiveProject(projectId: string) {
+  console.log("ARCHIVE CLICKED", projectId);
+
   const confirmed = window.confirm(
     "Archive this project?"
   );
 
+
+
   if (!confirmed) return;
 
-  setProjects(
-    projects.filter((_, index) => index !== indexToRemove)
-  );
-};
+  const { data, error } = await supabase
+  .from("projects")
+  .update({
+    archived: true,
+  })
+  .eq("id", projectId)
+  .select();
+    console.log("ARCHIVE RESULT", data);
+    console.log("ARCHIVE ERROR", error);
+    console.log("PROJECT ID", projectId);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  await fetchProjects();
+}
+
+
+
 const filteredProjects = projects.filter((project: any) =>
   project.project_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,15 +118,21 @@ const filteredProjects = projects.filter((project: any) =>
 
       {/* Page Header */}
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-wide">
-          Projects
-        </h1>
+      <div className="flex justify-between items-start mb-8">
 
-        <p className="mt-1 text-sm text-gray-400">
-          Manage active projects.
-        </p>
-      </div>
+  <div>
+    <h1 className="text-2xl font-semibold tracking-wide">
+      Projects
+    </h1>
+
+    <p className="mt-1 text-sm text-gray-400">
+      Manage active projects.
+    </p>
+  </div>
+
+  <HeaderActions />
+
+</div>
 
       {/* Navigation */}
 
@@ -228,7 +259,7 @@ const filteredProjects = projects.filter((project: any) =>
 </button>
 
       <button
-        onClick={() => handleArchiveProject(index)}
+        onClick={() => handleArchiveProject(project.id)}
         className="text-gray-400 hover:text-[#E57373]"
       >
        <Archive size={16} />

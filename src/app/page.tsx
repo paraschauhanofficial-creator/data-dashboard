@@ -4,6 +4,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Eye, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import HeaderActions from "@/components/HeaderActions";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -94,7 +95,8 @@ const activeOnIvion = projects.filter(
 const pendingIvionDeletion = projects.filter(
   (p) =>
     p.ivion_status === "Aligned" &&
-    p.bundle_saved === true
+    p.bundle_saved === true &&
+    !p.deleted_from_ivion
 ).length;
 
 
@@ -181,15 +183,21 @@ projects.forEach((project) => {
 
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-wide">
-          Data Management
-        </h1>
+      <div className="flex justify-between items-start mb-8">
 
-        <p className="mt-1 text-sm text-gray-400">
-          Data updates and tracking.
-        </p>
-      </div>
+  <div>
+    <h1 className="text-2xl font-semibold tracking-wide">
+      Data Management
+    </h1>
+
+    <p className="mt-1 text-sm text-gray-400">
+      Data updates and tracking.
+    </p>
+  </div>
+
+  <HeaderActions />
+
+</div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
   <Navbar />
