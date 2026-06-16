@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, User, LogOut, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -14,8 +14,36 @@ export default function HeaderActions({
   hideArchive = false,
 }: Props) {
   const router = useRouter();
-
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+
+
+  useEffect(() => {
+  getCurrentUser();
+}, []);
+
+
+
+async function getCurrentUser() {
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", data.user.id)
+    .single();
+
+  const name =
+    profile?.full_name?.split(" ")[0] ||
+    data.user.email?.split("@")[0] ||
+    "User";
+
+  setUserName(name);
+}
+
+
 
   async function handleLogout() {
     try {
@@ -36,7 +64,13 @@ export default function HeaderActions({
   }
 
   return (
-    <div className="flex items-center gap-2 relative">
+    <div className="flex items-center gap-3 relative">
+
+
+      <span className="text-sm text-gray-300 hidden md:block">
+  {userName}
+</span>
+
 
       {!hideArchive && (
         <Link
