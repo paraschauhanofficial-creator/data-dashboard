@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import HeaderActions from "@/components/HeaderActions";
 import { supabase } from "@/lib/supabase";
 import { Check, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Profile = {
   id: string;
@@ -27,22 +28,62 @@ const [newPassword, setNewPassword] = useState("");
 const [newRole, setNewRole] = useState("staff");
 const [creatingUser, setCreatingUser] = useState(false);
 
-  useEffect(() => {
-    loadUsers();
-    getCurrentUser();
-  }, []);
+const [authLoading, setAuthLoading] = useState(true);
+const router = useRouter();
 
-  async function getCurrentUser() {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-      setCurrentUser(profile);
-    }
+  useEffect(() => {
+  checkAuth();
+}, []);
+
+
+
+
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
   }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin") {
+    router.push("/");
+    return;
+  }
+
+  await loadUsers();
+  await getCurrentUser();
+
+  setAuthLoading(false);
+}
+
+
+
+async function getCurrentUser() {
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
+
+  setCurrentUser(profile);
+}
+
+
+
 
   async function loadUsers() {
     const { data } = await supabase
@@ -174,7 +215,13 @@ async function createUser() {
 
 
 
-
+if (authLoading) {
+  return (
+    <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
+      Loading...
+    </main>
+  );
+}
 
 
   
