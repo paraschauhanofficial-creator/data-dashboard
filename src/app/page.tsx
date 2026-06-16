@@ -8,16 +8,19 @@ import HeaderActions from "@/components/HeaderActions";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import AuthGuard from "@/components/AuthGuard";
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-const [projectNo, setProjectNo] = useState("");
-const [client, setClient] = useState("");
-const [projectName, setProjectName] = useState("");
+  const [projectNo, setProjectNo] = useState("");
+  const [client, setClient] = useState("");
+  const [projectName, setProjectName] = useState("");
   const router = useRouter();
+
+  
 
 
 
@@ -202,6 +205,12 @@ projects.forEach((project) => {
 
 
 
+
+
+
+
+
+
 if (authLoading) {
   return (
     <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
@@ -239,6 +248,12 @@ if (authLoading) {
 
 
 </div>
+
+
+
+
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
   <Card
   title="Active Projects"

@@ -25,6 +25,9 @@ export default function ProjectsPage() {
     const [client, setClient] = useState("");
     const [projectName, setProjectName] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+
+    const [sortBy, setSortBy] = useState("newest");
+ const [statusFilter, setStatusFilter] = useState("all");
    
     useEffect(() => {
     fetchProjects();
@@ -108,11 +111,50 @@ async function handleArchiveProject(projectId: string) {
 
 
 
-const filteredProjects = projects.filter((project: any) =>
-  project.project_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  project.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
-);
+const filteredProjects = [...projects]
+  .filter((project: any) => {
+    const matchesSearch =
+      project.project_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      project.data_status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  })
+  .sort((a: any, b: any) => {
+    switch (sortBy) {
+      case "az":
+        return a.project_name.localeCompare(b.project_name);
+
+      case "za":
+        return b.project_name.localeCompare(a.project_name);
+
+      case "projectAsc":
+        return a.project_no.localeCompare(b.project_no);
+
+      case "projectDesc":
+        return b.project_no.localeCompare(a.project_no);
+
+      case "oldest":
+        return (
+          new Date(a.created_at).getTime() -
+          new Date(b.created_at).getTime()
+        );
+
+      case "newest":
+      default:
+        return (
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+        );
+    }
+  });
+
+
+
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">
 
@@ -143,23 +185,59 @@ const filteredProjects = projects.filter((project: any) =>
                 Add Project
         </Button>
       </div>
-      <div className="mb-6">
+
+
+
+
+     <div className="mb-6 flex flex-col md:flex-row gap-4">
+
   <input
     type="text"
     placeholder="Search project number, client, or project name..."
     value={searchTerm}
     onChange={(e) => setSearchTerm(e.target.value)}
-    className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#2ABEFF]/40"
+    className="flex-1 bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#2ABEFF]/40"
   />
+
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value)}
+    className="bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-sm"
+  >
+    <option value="newest">Newest First</option>
+    <option value="oldest">Oldest First</option>
+    <option value="az">Project Name A-Z</option>
+    <option value="za">Project Name Z-A</option>
+    <option value="projectAsc">Project No Asc</option>
+    <option value="projectDesc">Project No Desc</option>
+  </select>
+
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+    className="bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-sm"
+  >
+    <option value="all">All Statuses</option>
+    <option value="Pending Alignment">Pending Alignment</option>
+    <option value="Pending QC">Pending QC</option>
+    <option value="Ready for Handover">Ready for Handover</option>
+    <option value="Missing Scan">Missing Scan</option>
+    <option value="Missing Area">Missing Area</option>
+    <option value="Data Slips">Data Slips</option>
+  </select>
+
 </div>
+
+
+
 
       {/* Projects Table */}
 
-      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-x-auto">
+      <div className="bg-[#242424] border border-[#333333] rounded-2xl overflow-x-auto overflow-y-auto max-h-[70vh]">
 
         {/* Table Header */}
 
-        <div className="min-w-[1000px] grid grid-cols-8 gap-4 px-6 py-4 border-b border-[#333333] text-xs uppercase tracking-wider text-gray-500">
+        <div className="sticky top-0 z-20 min-w-[1000px] grid grid-cols-8 gap-4 px-6 py-4 border-b border-[#333333] bg-[#242424] text-xs uppercase tracking-wider text-gray-500">
 
           <div>Project No.</div>
           <div>Client</div>
