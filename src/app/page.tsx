@@ -12,15 +12,37 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
 const [projectNo, setProjectNo] = useState("");
 const [client, setClient] = useState("");
 const [projectName, setProjectName] = useState("");
   const router = useRouter();
 
+
+
+
   useEffect(() => {
-  fetchProjects();
+  checkAuth();
 }, []);
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+
+  await fetchProjects();
+  setAuthLoading(false);
+}
+
+
+
+
 
 async function handleCreateProject() {
   if (!projectNo || !client || !projectName) return;
@@ -178,6 +200,15 @@ projects.forEach((project) => {
 });
 
 
+
+
+if (authLoading) {
+  return (
+    <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
+      Loading...
+    </main>
+  );
+}
 
 
 
