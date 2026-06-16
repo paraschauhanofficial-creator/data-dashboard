@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import HeaderActions from "@/components/HeaderActions";
 import { supabase } from "@/lib/supabase";
 import DataProjectRow from "@/components/data/DataProjectRow";
+import { useRouter } from "next/navigation";
 
 export default function DataPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -13,9 +14,36 @@ export default function DataPage() {
   const [sortBy, setSortBy] = useState("newest");
 const [statusFilter, setStatusFilter] = useState("all");
 
+const [authLoading, setAuthLoading] = useState(true);
+const router = useRouter();
+
   useEffect(() => {
-    fetchProjects();
-  }, []);
+  checkAuth();
+}, []);
+
+
+
+
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+
+  await fetchProjects();
+  setAuthLoading(false);
+}
+
+
+
+
+
+
 
   async function fetchProjects() {
     const { data, error } = await supabase
@@ -84,7 +112,13 @@ const [statusFilter, setStatusFilter] = useState("all");
   });
 
 
-
+if (authLoading) {
+  return (
+    <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
+      Loading...
+    </main>
+  );
+}
 
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">

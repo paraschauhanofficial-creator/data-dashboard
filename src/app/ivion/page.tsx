@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import HeaderActions from "@/components/HeaderActions";
 import IvionRow from "@/components/ivion/ivionrow";
+import { useRouter } from "next/navigation";
 
 export default function IvionPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -13,9 +14,34 @@ export default function IvionPage() {
   const [sortBy, setSortBy] = useState("newest");
 const [statusFilter, setStatusFilter] = useState("all");
 
+const [authLoading, setAuthLoading] = useState(true);
+const router = useRouter();
+
+
+
+
   useEffect(() => {
-    fetchProjects();
-  }, []);
+  checkAuth();
+}, []);
+
+
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+
+  await fetchProjects();
+  setAuthLoading(false);
+}
+
+
+
 
   async function fetchProjects() {
     const { data, error } = await supabase

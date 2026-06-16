@@ -5,14 +5,39 @@ import Navbar from "@/components/Navbar";
 import HeaderActions from "@/components/HeaderActions";
 import { supabase } from "@/lib/supabase";
 import { RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ArchivePage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [authLoading, setAuthLoading] = useState(true);
+const router = useRouter();
+
   useEffect(() => {
-    fetchProjects();
-  }, []);
+  checkAuth();
+}, []);
+
+
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+
+  await fetchProjects();
+  setAuthLoading(false);
+}
+
+
+
+
+
 
   async function fetchProjects() {
     const { data, error } = await supabase
@@ -63,6 +88,14 @@ export default function ArchivePage() {
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase())
   );
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
+        Loading...
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#1A1A1A] text-white px-4 md:px-8 py-6">

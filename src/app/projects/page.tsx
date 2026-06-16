@@ -8,6 +8,7 @@ import HeaderActions from "@/components/HeaderActions";
 import { supabase } from "@/lib/supabase";
 
 
+
 import {
   Eye,
   Pencil,
@@ -28,10 +29,37 @@ export default function ProjectsPage() {
 
     const [sortBy, setSortBy] = useState("newest");
  const [statusFilter, setStatusFilter] = useState("all");
+ const [authLoading, setAuthLoading] = useState(true);
+
+
+
+
+ 
+
+ 
    
     useEffect(() => {
-    fetchProjects();
-                   }, []);
+  checkAuth();
+}, []);
+
+
+
+
+async function checkAuth() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+
+  await fetchProjects();
+  setAuthLoading(false);
+}
+
+                  
 
     async function fetchProjects() {
     const { data, error } = await supabase
@@ -47,6 +75,10 @@ export default function ProjectsPage() {
 
   setProjects(data || []);
 }
+
+
+
+
     const handleCreateProject = async () => {
   if (!projectNo || !client || !projectName) return;
 
@@ -152,6 +184,19 @@ const filteredProjects = [...projects]
         );
     }
   });
+
+
+
+
+  if (authLoading) {
+  return (
+    <main className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-white">
+      Loading...
+    </main>
+  );
+}
+
+
 
 
 
